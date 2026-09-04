@@ -5,10 +5,16 @@ const express = require('express');
 const router = express.Router();
 
 // 3. Import the specific function that handles the ticket creation logic from the controller
-const { createTicket } = require('../controllers/ticketController');
+const { createTicket,updateTicketStatus } = require('../controllers/ticketController');
 
 // 4. Define a POST route at the base path ('/') and hand off requests to the createTicket function
 router.post('/', createTicket);
+
+router.get("/test", (req, res) => {
+    res.json({ message: "Ticket route working" });
+});
+
+router.patch("/:id/status", updateTicketStatus);
 
 // 5. Export this router so server.js can import and connect it to the main application
 module.exports = router;
@@ -20,3 +26,4 @@ module.exports = router;
 // The main counter inside that room is '/' (the starting point of that department).
 
 // So, a customer walking up to that main counter (/) is making a request to /api/tickets + / = /api/tickets.
+

@@ -7,7 +7,7 @@ const createTicket = async (req,res) => {
     
     // 2. Business validation
     if(!employee_id || !title || !description){
-        return re.status(400).json({
+        return res.status(400).json({
             error: "Employee, title and description are required"
         });
     }
@@ -38,8 +38,71 @@ catch (err) {
     }
 };
 
-module.exports = {createTicket};
+const updateTicketStatus = async (req, res) => {
+    console.log("PATCH endpoint reached");
+    const client = await pool.connect();
 
+    try {
+
+        await client.query("BEGIN");
+
+        const { id } = req.params;
+        const { status, changed_by } = req.body;
+
+        const current = await client.query(
+            `SELECT status
+             FROM tickets
+             WHERE ticket_id = $1`,
+            [id]
+        );
+
+        if (current.rows.length === 0) {
+            await client.query("ROLLBACK");
+
+            return res.status(404).json({
+                error: "Ticket not found"
+            });
+        }
+
+        const oldStatus = current.rows[0].status;
+
+        const updated = await client.query(
+            `UPDATE tickets
+             SET status = $1
+             WHERE ticket_id = $2
+             RETURNING *`,
+            [status, id]
+        );
+
+        await client.query(
+            `INSERT INTO ticket_history
+            (ticket_id, old_status, new_status, changed_by)
+            VALUES ($1,$2,$3,$4)`,
+            [id, oldStatus, status, changed_by]
+        );
+
+        await client.query("COMMIT");
+
+        return res.json(updated.rows[0]);
+
+    } catch (err) {
+
+        await client.query("ROLLBACK");
+
+        return res.status(500).json({
+            error: "Transaction failed"
+        });
+
+    } finally {
+
+        client.release();
+
+    }
+};
+
+module.exports = { createTicket,
+    updateTicketStatus
+};
 
 // HTTP STATUS CODES REFERENCE FOR EXPRESS CONTROLLERS
 
