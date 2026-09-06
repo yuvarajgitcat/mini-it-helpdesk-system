@@ -100,8 +100,48 @@ const updateTicketStatus = async (req, res) => {
     }
 };
 
+const getAllTickets = async (req, res) => {
+
+    try {
+
+        const result = await pool.query(
+        `
+        SELECT
+            t.ticket_id,
+            t.title,
+            t.priority,
+            t.status,
+            e.name AS employee_name,
+            a.asset_tag
+
+        FROM tickets t
+
+        JOIN employees e
+            ON t.employee_id = e.employee_id
+
+        LEFT JOIN assets a
+            ON t.asset_id = a.asset_id
+
+        ORDER BY t.created_at DESC;
+        `
+        );
+
+        return res.json(result.rows);
+
+    } catch (err) {
+
+        console.error(err);
+
+        return res.status(500).json({
+            error: "Unable to fetch tickets"
+        });
+
+    }
+
+};
+
 module.exports = { createTicket,
-    updateTicketStatus
+    updateTicketStatus,getAllTickets
 };
 
 // HTTP STATUS CODES REFERENCE FOR EXPRESS CONTROLLERS

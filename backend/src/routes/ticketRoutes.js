@@ -5,14 +5,12 @@ const express = require('express');
 const router = express.Router();
 
 // 3. Import the specific function that handles the ticket creation logic from the controller
-const { createTicket,updateTicketStatus } = require('../controllers/ticketController');
+const { createTicket,updateTicketStatus,getAllTickets } = require('../controllers/ticketController');
 
 // 4. Define a POST route at the base path ('/') and hand off requests to the createTicket function
 router.post('/', createTicket);
 
-router.get("/test", (req, res) => {
-    res.json({ message: "Ticket route working" });
-});
+router.get("/",getAllTickets);
 
 router.patch("/:id/status", updateTicketStatus);
 
