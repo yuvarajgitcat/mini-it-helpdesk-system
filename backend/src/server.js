@@ -16,11 +16,14 @@ app.get("/",(req, res)=>{
 
 // 8. Import the ticket routing module from the routes directory
 const ticketRoutes = require("./routes/ticketRoutes");
+const employeeRoutes = require("./routes/employeeRoutes");
+const assetRoutes = require("./routes/assetRoutes");
 
 // 9. Mount ticketRoutes under the '/api/tickets' base path
 // Example: router.post('/') in ticketRoutes.js becomes POST /api/tickets
 app.use("/api/tickets", ticketRoutes);
-
+app.use("/api/employees", employeeRoutes);
+app.use("/api/assets",assetRoutes);
 const PORT = process.env.SERVER_PORT || 5000;
 
 app.listen(PORT, () => {
