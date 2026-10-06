@@ -5,16 +5,45 @@ const express = require('express');
 const router = express.Router();
 
 // 3. Import the specific function that handles the ticket creation logic from the controller
-const { createTicket,updateTicketStatus,getAllTickets } = require('../controllers/ticketController');
+const {
+    createTicket,
+    getAllTickets,
+    getTicketById,
+    updateTicketStatus,
+    getTicketHistory,
+    getTicketStatistics,
+    findSimilarTickets
+} = require("../controllers/ticketController");
 
 // 4. Define a POST route at the base path ('/') and hand off requests to the createTicket function
-router.post('/', createTicket);
 
-router.get("/",getAllTickets);
+
+
+
+// =========================================================
+// IMPORTANT:
+// More specific routes must come before /:id
+// =========================================================
+
+router.get("/", getAllTickets);
+
+router.post("/", createTicket);
+
+router.get("/statistics", getTicketStatistics);
+
+router.get("/:id/history", getTicketHistory);
+
+
+router.get("/:id", getTicketById);
+
+router.get(
+    "/:id/similar",
+    findSimilarTickets
+);
 
 router.patch("/:id/status", updateTicketStatus);
 
-// 5. Export this router so server.js can import and connect it to the main application
+
 module.exports = router;
 
 // The Restaurant Analogy

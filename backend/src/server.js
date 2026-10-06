@@ -18,12 +18,14 @@ app.get("/",(req, res)=>{
 const ticketRoutes = require("./routes/ticketRoutes");
 const employeeRoutes = require("./routes/employeeRoutes");
 const assetRoutes = require("./routes/assetRoutes");
+const evidenceRoutes = require("./routes/evidenceRoutes");
 
 // 9. Mount ticketRoutes under the '/api/tickets' base path
 // Example: router.post('/') in ticketRoutes.js becomes POST /api/tickets
 app.use("/api/tickets", ticketRoutes);
 app.use("/api/employees", employeeRoutes);
 app.use("/api/assets",assetRoutes);
+app.use("/api",evidenceRoutes);
 const PORT = process.env.SERVER_PORT || 5000;
 
 app.listen(PORT, () => {
