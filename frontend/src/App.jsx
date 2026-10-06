@@ -1,43 +1,183 @@
 import { useEffect, useState } from "react";
-import { getTickets,getAssets,getEmployees,createTicket,updateTicketStatus} from "./services/api";
+
+import {
+    getTickets,
+    updateTicketStatus,
+    getEmployees,
+    getAssets,
+    createTicket,
+    getTicketStatistics
+} from "./services/api";
+
+import CreateTicketForm from "./components/tickets/CreateTicketForm";
+
+import DashboardPage from "./pages/DashboardPage";
+import QuickCreatePage from "./pages/QuickCreatePage";
+import TicketsPage from "./pages/TicketsPage";
+import EmployeesPage from "./pages/EmployeesPage";
+import AssetsPage from "./pages/AssetsPage";
+import ReportsPage from "./pages/ReportsPage";
+import TicketReportsPage from "./pages/TicketReportsPage";
+import MorePage from "./pages/MorePage";
+import SettingsPage from "./pages/SettingsPage";
+import HelpPage from "./pages/HelpPage";
+
+import { AppSidebar } from "@/components/app-sidebar";
+import { SiteHeader } from "@/components/site-header";
+
+import {
+    SidebarInset,
+    SidebarProvider
+} from "@/components/ui/sidebar";
+
+import {
+    Card,
+    CardContent,
+    CardHeader,
+    CardTitle
+} from "@/components/ui/card";
+
+import { Badge } from "@/components/ui/badge";
+
 
 function App() {
 
+    // =====================================================
+    // APPLICATION DATA
+    // =====================================================
+
     const [tickets, setTickets] = useState([]);
+
     const [employees, setEmployees] = useState([]);
+
     const [assets, setAssets] = useState([]);
 
+    const [statistics, setStatistics] = useState({
+        total_tickets: 0,
+        open_tickets: 0,
+        in_progress_tickets: 0,
+        resolved_tickets: 0,
+        closed_tickets: 0,
+        high_priority_tickets: 0
+    });
+
+
+    // =====================================================
+    // CREATE TICKET FORM
+    // =====================================================
+
     const [form, setForm] = useState({
-    employee_id: "",
-    asset_id: "",
-    title: "",
-    description: "",
-    priority: "MEDIUM"
-});
+        employee_id: "",
+        asset_id: "",
+        title: "",
+        description: "",
+        priority: "MEDIUM"
+    });
+
+
+    // =====================================================
+    // CURRENT PAGE
+    // =====================================================
+
+    const [page, setPage] = useState(
+        window.location.hash.replace("#", "")
+        || "dashboard"
+    );
+
+
+    // =====================================================
+    // SIDEBAR / HASH NAVIGATION
+    // =====================================================
 
     useEffect(() => {
-        async function loadData() {
-            try {
-                const ticketData = await getTickets();
-                const employeeData = await getEmployees();
-                const assetData = await getAssets();
 
-                setTickets(ticketData);
-                setEmployees(employeeData);
-                setAssets(assetData);
+        const handleHashChange = () => {
 
-            } catch (error) {
-                console.error("Error loading data:", error);
-            }
-        }
+            const currentPage =
+                window.location.hash.replace("#", "")
+                || "dashboard";
 
-        loadData();
+            setPage(currentPage);
+        };
+
+
+        window.addEventListener(
+            "hashchange",
+            handleHashChange
+        );
+
+
+        return () => {
+
+            window.removeEventListener(
+                "hashchange",
+                handleHashChange
+            );
+
+        };
+
     }, []);
 
 
-    // --------------------------------------------------
+    // =====================================================
+    // LOAD DATABASE DATA
+    // =====================================================
+
+    const loadDashboardData = async () => {
+
+        try {
+
+            const [
+                ticketData,
+                employeeData,
+                assetData,
+                statisticsData
+            ] = await Promise.all([
+
+                getTickets(),
+
+                getEmployees(),
+
+                getAssets(),
+
+                getTicketStatistics()
+
+            ]);
+
+
+            setTickets(ticketData);
+
+            setEmployees(employeeData);
+
+            setAssets(assetData);
+
+            setStatistics(
+                statisticsData.summary
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                "Error loading dashboard:",
+                error
+            );
+
+        }
+
+    };
+
+
+    useEffect(() => {
+
+        loadDashboardData();
+
+    }, []);
+
+
+    // =====================================================
     // CREATE TICKET
-    // --------------------------------------------------
+    // =====================================================
 
     const handleCreateTicket = async (e) => {
 
@@ -47,53 +187,64 @@ function App() {
 
             await createTicket({
 
-                employee_id: Number(form.employee_id),
+                employee_id:
+                    Number(form.employee_id),
 
-                asset_id: form.asset_id
-                    ? Number(form.asset_id)
-                    : null,
+                asset_id:
+                    form.asset_id
+                        ? Number(form.asset_id)
+                        : null,
 
-                title: form.title,
+                title:
+                    form.title,
 
-                description: form.description,
+                description:
+                    form.description,
 
-                priority: form.priority
+                priority:
+                    form.priority
 
             });
 
-
-            // Clear form after successful creation
 
             setForm({
+
                 employee_id: "",
+
                 asset_id: "",
+
                 title: "",
+
                 description: "",
+
                 priority: "MEDIUM"
+
             });
 
 
-            // Reload tickets so the new ticket appears
-
-            const updatedTickets = await getTickets();
-
-            setTickets(updatedTickets);
+            await loadDashboardData();
 
 
         } catch (error) {
 
-            console.error("Error creating ticket:", error);
+            console.error(
+                "Error creating ticket:",
+                error
+            );
 
         }
 
     };
 
 
-    // --------------------------------------------------
+    // =====================================================
     // UPDATE TICKET STATUS
-    // --------------------------------------------------
+    // =====================================================
 
-    const handleStatusChange = async (ticketId, newStatus) => {
+    const handleStatusChange = async (
+        ticketId,
+        newStatus
+    ) => {
 
         try {
 
@@ -103,11 +254,7 @@ function App() {
             );
 
 
-            // Reload tickets after status update
-
-            const updatedTickets = await getTickets();
-
-            setTickets(updatedTickets);
+            await loadDashboardData();
 
 
         } catch (error) {
@@ -122,353 +269,441 @@ function App() {
     };
 
 
+    // =====================================================
+    // DASHBOARD
+    // =====================================================
+
+    const renderDashboard = () => {
+
+        return (
+
+            <>
+
+                <div>
+
+                    <h1 className="text-2xl font-semibold">
+                        Dashboard
+                    </h1>
+
+                    <p className="text-muted-foreground">
+                        IT Service Desk & Asset Management
+                    </p>
+
+                </div>
+
+
+                {/* =================================================
+                    DATABASE-POWERED STATISTICS
+                ================================================= */}
+
+                <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
+
+                    <Card>
+
+                        <CardHeader>
+
+                            <CardTitle className="text-sm">
+                                Total Tickets
+                            </CardTitle>
+
+                        </CardHeader>
+
+                        <CardContent>
+
+                            <div className="text-3xl font-bold">
+
+                                {statistics.total_tickets}
+
+                            </div>
+
+                            <p className="text-xs text-muted-foreground">
+
+                                From PostgreSQL COUNT(*)
+
+                            </p>
+
+                        </CardContent>
+
+                    </Card>
+
+
+                    <Card>
+
+                        <CardHeader>
+
+                            <CardTitle className="text-sm">
+                                Open Tickets
+                            </CardTitle>
+
+                        </CardHeader>
+
+                        <CardContent>
+
+                            <div className="text-3xl font-bold">
+
+                                {statistics.open_tickets}
+
+                            </div>
+
+                            <p className="text-xs text-muted-foreground">
+
+                                Database status aggregation
+
+                            </p>
+
+                        </CardContent>
+
+                    </Card>
+
+
+                    <Card>
+
+                        <CardHeader>
+
+                            <CardTitle className="text-sm">
+                                In Progress
+                            </CardTitle>
+
+                        </CardHeader>
+
+                        <CardContent>
+
+                            <div className="text-3xl font-bold">
+
+                                {statistics.in_progress_tickets}
+
+                            </div>
+
+                            <p className="text-xs text-muted-foreground">
+
+                                Database status aggregation
+
+                            </p>
+
+                        </CardContent>
+
+                    </Card>
+
+
+                    <Card>
+
+                        <CardHeader>
+
+                            <CardTitle className="text-sm">
+                                High Priority
+                            </CardTitle>
+
+                        </CardHeader>
+
+                        <CardContent>
+
+                            <div className="text-3xl font-bold">
+
+                                {statistics.high_priority_tickets}
+
+                            </div>
+
+                            <p className="text-xs text-muted-foreground">
+
+                                PostgreSQL FILTER
+
+                            </p>
+
+                        </CardContent>
+
+                    </Card>
+
+                </div>
+
+
+                {/* =================================================
+                    CREATE TICKET
+                ================================================= */}
+
+                <CreateTicketForm
+
+                    employees={employees}
+
+                    assets={assets}
+
+                    form={form}
+
+                    setForm={setForm}
+
+                    onSubmit={handleCreateTicket}
+
+                />
+
+
+                {/* =================================================
+                    TICKETS
+                ================================================= */}
+
+                <Card>
+
+                    <CardHeader>
+
+                        <CardTitle>
+                            Tickets
+                        </CardTitle>
+
+                    </CardHeader>
+
+
+                    <CardContent>
+
+                        <div className="overflow-x-auto">
+
+                            <table className="w-full">
+
+                                <thead className="border-b">
+
+                                    <tr>
+
+                                        <th className="px-4 py-3 text-left text-sm">
+                                            ID
+                                        </th>
+
+                                        <th className="px-4 py-3 text-left text-sm">
+                                            Title
+                                        </th>
+
+                                        <th className="px-4 py-3 text-left text-sm">
+                                            Employee
+                                        </th>
+
+                                        <th className="px-4 py-3 text-left text-sm">
+                                            Asset
+                                        </th>
+
+                                        <th className="px-4 py-3 text-left text-sm">
+                                            Priority
+                                        </th>
+
+                                        <th className="px-4 py-3 text-left text-sm">
+                                            Status
+                                        </th>
+
+                                    </tr>
+
+                                </thead>
+
+
+                                <tbody>
+
+                                    {tickets.map(
+                                        (ticket) => (
+
+                                            <tr
+                                                key={
+                                                    ticket.ticket_id
+                                                }
+                                                className="border-b"
+                                            >
+
+                                                <td className="px-4 py-3">
+
+                                                    {ticket.ticket_id}
+
+                                                </td>
+
+
+                                                <td className="px-4 py-3">
+
+                                                    {ticket.title}
+
+                                                </td>
+
+
+                                                <td className="px-4 py-3">
+
+                                                    {
+                                                        ticket.employee_name
+                                                    }
+
+                                                </td>
+
+
+                                                <td className="px-4 py-3">
+
+                                                    {
+                                                        ticket.asset_tag
+                                                        ||
+                                                        "No asset"
+                                                    }
+
+                                                </td>
+
+
+                                                <td className="px-4 py-3">
+
+                                                    <Badge variant="outline">
+
+                                                        {
+                                                            ticket.priority
+                                                        }
+
+                                                    </Badge>
+
+                                                </td>
+
+
+                                                <td className="px-4 py-3">
+
+                                                    <select
+
+                                                        value={
+                                                            ticket.status
+                                                        }
+
+                                                        onChange={(
+                                                            e
+                                                        ) =>
+                                                            handleStatusChange(
+                                                                ticket.ticket_id,
+                                                                e.target.value
+                                                            )
+                                                        }
+
+                                                        className="rounded-md border px-2 py-1"
+
+                                                    >
+
+                                                        <option value="OPEN">
+                                                            OPEN
+                                                        </option>
+
+                                                        <option value="IN_PROGRESS">
+                                                            IN PROGRESS
+                                                        </option>
+
+                                                        <option value="RESOLVED">
+                                                            RESOLVED
+                                                        </option>
+
+                                                        <option value="CLOSED">
+                                                            CLOSED
+                                                        </option>
+
+                                                    </select>
+
+                                                </td>
+
+                                            </tr>
+
+                                        )
+                                    )}
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </CardContent>
+
+                </Card>
+
+            </>
+
+        );
+
+    };
+
+
+    // =====================================================
+    // PAGE ROUTER
+    // =====================================================
+
+    const renderPage = () => {
+
+        switch (page) {
+
+            case "quick-create":
+
+                return <QuickCreatePage />;
+
+
+            case "tickets":
+
+                return <TicketsPage />;
+
+
+            case "employees":
+
+                return <EmployeesPage />;
+
+
+            case "assets":
+
+                return <AssetsPage />;
+
+
+            case "reports":
+
+                return <ReportsPage />;
+
+
+            case "ticket-reports":
+
+                return <TicketReportsPage />;
+
+
+            case "more":
+
+                return <MorePage />;
+
+
+            case "settings":
+
+                return <SettingsPage />;
+
+
+            case "help":
+
+                return <HelpPage />;
+
+
+            case "dashboard":
+
+            default:
+
+                return renderDashboard();
+
+        }
+
+    };
+
+
+    // =====================================================
+    // APPLICATION SHELL
+    // =====================================================
 
     return (
 
-        <div>
+        <SidebarProvider defaultOpen={true}>
 
-            {/* ----------------------------------------- */}
-            {/* PAGE TITLE */}
-            {/* ----------------------------------------- */}
+            <AppSidebar />
 
-            <h1>IT Helpdesk Dashboard</h1>
 
+            <SidebarInset>
 
-            {/* ----------------------------------------- */}
-            {/* CREATE TICKET FORM */}
-            {/* ----------------------------------------- */}
+                <SiteHeader />
 
-            <h2>Create Ticket</h2>
 
+                <main className="flex flex-1 flex-col gap-6 p-6">
 
-            <form onSubmit={handleCreateTicket}>
+                    {renderPage()}
 
-                {/* EMPLOYEE */}
+                </main>
 
-                <div>
+            </SidebarInset>
 
-                    <label>
-                        Employee:
-                    </label>
-
-                    {" "}
-
-                    <select
-                        value={form.employee_id}
-                        onChange={(e) =>
-                            setForm({
-                                ...form,
-                                employee_id: e.target.value
-                            })
-                        }
-                        required
-                    >
-
-                        <option value="">
-                            Select employee
-                        </option>
-
-
-                        {employees.map((employee) => (
-
-                            <option
-                                key={employee.employee_id}
-                                value={employee.employee_id}
-                            >
-                                {employee.name}
-                            </option>
-
-                        ))}
-
-                    </select>
-
-                </div>
-
-
-                <br />
-
-
-                {/* ASSET */}
-
-                <div>
-
-                    <label>
-                        Asset:
-                    </label>
-
-                    {" "}
-
-                    <select
-                        value={form.asset_id}
-                        onChange={(e) =>
-                            setForm({
-                                ...form,
-                                asset_id: e.target.value
-                            })
-                        }
-                    >
-
-                        <option value="">
-                            No asset
-                        </option>
-
-
-                        {assets.map((asset) => (
-
-                            <option
-                                key={asset.asset_id}
-                                value={asset.asset_id}
-                            >
-                                {asset.asset_tag} - {asset.asset_type}
-                            </option>
-
-                        ))}
-
-                    </select>
-
-                </div>
-
-
-                <br />
-
-
-                {/* TITLE */}
-
-                <div>
-
-                    <label>
-                        Title:
-                    </label>
-
-                    {" "}
-
-                    <input
-                        type="text"
-                        value={form.title}
-                        onChange={(e) =>
-                            setForm({
-                                ...form,
-                                title: e.target.value
-                            })
-                        }
-                        required
-                    />
-
-                </div>
-
-
-                <br />
-
-
-                {/* DESCRIPTION */}
-
-                <div>
-
-                    <label>
-                        Description:
-                    </label>
-
-                    {" "}
-
-                    <textarea
-                        value={form.description}
-                        onChange={(e) =>
-                            setForm({
-                                ...form,
-                                description: e.target.value
-                            })
-                        }
-                        required
-                    />
-
-                </div>
-
-
-                <br />
-
-
-                {/* PRIORITY */}
-
-                <div>
-
-                    <label>
-                        Priority:
-                    </label>
-
-                    {" "}
-
-                    <select
-                        value={form.priority}
-                        onChange={(e) =>
-                            setForm({
-                                ...form,
-                                priority: e.target.value
-                            })
-                        }
-                    >
-
-                        <option value="LOW">
-                            LOW
-                        </option>
-
-                        <option value="MEDIUM">
-                            MEDIUM
-                        </option>
-
-                        <option value="HIGH">
-                            HIGH
-                        </option>
-
-                    </select>
-
-                </div>
-
-
-                <br />
-
-
-                {/* SUBMIT */}
-
-                <button type="submit">
-                    Create Ticket
-                </button>
-
-            </form>
-
-
-            <hr />
-
-
-            {/* ----------------------------------------- */}
-            {/* TICKET STATISTICS */}
-            {/* ----------------------------------------- */}
-
-            <h2>Tickets</h2>
-
-            <p>
-                Total Tickets: {tickets.length}
-            </p>
-
-
-            {/* ----------------------------------------- */}
-            {/* TICKET TABLE */}
-            {/* ----------------------------------------- */}
-
-            <table border="1">
-
-                <thead>
-
-                    <tr>
-
-                        <th>ID</th>
-
-                        <th>Title</th>
-
-                        <th>Employee</th>
-
-                        <th>Asset</th>
-
-                        <th>Priority</th>
-
-                        <th>Status</th>
-
-                    </tr>
-
-                </thead>
-
-
-                <tbody>
-
-                    {tickets.map((ticket) => (
-
-                        <tr key={ticket.ticket_id}>
-
-                            <td>
-                                {ticket.ticket_id}
-                            </td>
-
-
-                            <td>
-                                {ticket.title}
-                            </td>
-
-
-                            <td>
-                                {ticket.employee_name}
-                            </td>
-
-
-                            <td>
-                                {ticket.asset_tag || "No asset"}
-                            </td>
-
-
-                            <td>
-                                {ticket.priority}
-                            </td>
-
-
-                            <td>
-
-                                <select
-                                    value={ticket.status}
-                                    onChange={(e) =>
-                                        handleStatusChange(
-                                            ticket.ticket_id,
-                                            e.target.value
-                                        )
-                                    }
-                                >
-
-                                    <option value="OPEN">
-                                        OPEN
-                                    </option>
-
-                                    <option value="IN_PROGRESS">
-                                        IN PROGRESS
-                                    </option>
-
-                                    <option value="RESOLVED">
-                                        RESOLVED
-                                    </option>
-
-                                    <option value="CLOSED">
-                                        CLOSED
-                                    </option>
-
-                                </select>
-
-                            </td>
-
-                        </tr>
-
-                    ))}
-
-                </tbody>
-
-            </table>
-
-        </div>
+        </SidebarProvider>
 
     );
 
 }
 
+
 export default App;
-
-
-
-// [ Trigger: setTickets(data) ]
-//           │
-//           ▼
-// 1. Run App() function body ──> Pulls data from state vault ([ticket1, ticket2])
-//           │
-//           ▼
-// 2. Paint UI to Screen ────────> User immediately sees "Total Tickets: 2"
-//           │
-//           ▼
-// 3. Evaluate useEffect ────────> Checks dependency array [].
-//                                 Comparison: [] (Frame 1) vs [] (Frame 2) -> Unchanged!
-//           │
-//           ▼
-// 4. Skip Callback ─────────────> loadTickets() is completely skipped!
