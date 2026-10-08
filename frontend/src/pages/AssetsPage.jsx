@@ -56,7 +56,7 @@ function AssetsPage() {
 
             <div>
 
-                <h1 className="text-2xl font-semibold">
+                <h1 className="text-2xl font-semibold text-black">
                     Assets
                 </h1>
 

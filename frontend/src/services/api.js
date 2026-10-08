@@ -181,3 +181,115 @@ export async function getAssetTickets(
 
     return response.json();
 }
+
+export const uploadTicketEvidence = async (
+    ticketId,
+    file,
+    uploadedBy
+) => {
+
+    const formData =
+        new FormData();
+
+
+    formData.append(
+        "evidence",
+        file
+    );
+
+
+    if (uploadedBy) {
+
+        formData.append(
+            "uploaded_by",
+            uploadedBy
+        );
+
+    }
+
+
+    const response =
+        await fetch(
+            `http://localhost:5000/api/tickets/${ticketId}/evidence`,
+            {
+                method: "POST",
+                body: formData
+            }
+        );
+
+
+    const data =
+        await response.json();
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            data.error ||
+            "Evidence upload failed"
+        );
+
+    }
+
+
+    return data;
+
+};
+
+
+export const getTicketEvidence = async (
+    ticketId
+) => {
+
+    const response =
+        await fetch(
+            `http://localhost:5000/api/tickets/${ticketId}/evidence`
+        );
+
+
+    const data =
+        await response.json();
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            data.error ||
+            "Unable to fetch ticket evidence"
+        );
+
+    }
+
+
+    return data;
+
+};
+
+
+export const getSimilarTickets = async (
+    ticketId
+) => {
+
+    const response =
+        await fetch(
+            `http://localhost:5000/api/tickets/${ticketId}/similar`
+        );
+
+
+    const data =
+        await response.json();
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            data.error ||
+            "Unable to find similar tickets"
+        );
+
+    }
+
+
+    return data;
+
+};
