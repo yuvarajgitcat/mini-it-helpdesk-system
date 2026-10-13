@@ -8,4 +8,10 @@ const pool = new Pool({
     password: process.env.DB_PASSWORD
 });
 
+// Without this handler, an error on an idle connection (e.g. the database
+// pod being replaced) is an unhandled 'error' event and crashes the process.
+pool.on("error", (err) => {
+    console.error("Idle database client error (pool will reconnect):", err.message);
+});
+
 module.exports = pool;

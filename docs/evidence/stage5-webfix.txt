@@ -1,0 +1,24 @@
+﻿STAGE 5 web fix - 10/13/2026 10:10:51
+patched: yes
+655: `${import.meta.env.VITE_API_BASE ? "" : "http://localhost:5000"}${item.file_url}`;
+sha256:ad4dbb147aacecdf74b5435ac18de8497f2a9fd68cfc70dfc36ccf8d3f885964
+
+docker.io/library/helpdesk-web:v2
+docker.io/library/helpdesk-web:v1
+
+
+deployment.apps/web configured
+service/web unchanged
+Waiting for deployment "web" rollout to finish: 1 out of 2 new replicas have been updated...
+Waiting for deployment "web" rollout to finish: 1 out of 2 new replicas have been updated...
+Waiting for deployment "web" rollout to finish: 1 out of 2 new replicas have been updated...
+Waiting for deployment "web" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "web" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "web" rollout to finish: 1 old replicas are pending termination...
+deployment "web" successfully rolled out
+NAME                   IMAGE             READY
+web-5d69cf76b5-7d2fj   helpdesk-web:v1   true
+web-75f6b4f49b-8lbcm   helpdesk-web:v2   true
+web-75f6b4f49b-zxgdp   helpdesk-web:v2   true
+uploaded image via nginx (bytes, want 71297):
+71297

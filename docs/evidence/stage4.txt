@@ -1,0 +1,119 @@
+﻿STAGE 4 - 10/13/2026 09:45:39
+
+== 0. WEB -> API through nginx ==
+web pod: web-5d69cf76b5-7d2fj
+via 127.0.0.1 (bytes):
+2161
+via localhost (bytes):
+kubectl : wget: can't connect to remote host: Connection refused
+At line:1 char:1
++ kubectl exec -n helpdesk $web -- sh -c "wget -qO- http://localhost/ap ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (wget: can't con...nection refused:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+0
+index.html (bytes):
+458
+
+== 1. SCHEDULING: where Pods run + node allocation ==
+NAME                        READY   STATUS    RESTARTS   AGE     IP            NODE       NOMINATED NODE   READINESS GATES
+api-75c5c468fc-lqlj8        1/1     Running   0          3m29s   10.244.0.16   minikube   <none>           <none>
+api-75c5c468fc-vq252        1/1     Running   0          3m37s   10.244.0.12   minikube   <none>           <none>
+postgres-5ff8f5c867-cdxw5   1/1     Running   0          3m44s   10.244.0.10   minikube   <none>           <none>
+web-5d69cf76b5-7d2fj        1/1     Running   0          3m31s   10.244.0.15   minikube   <none>           <none>
+web-5d69cf76b5-c66vc        1/1     Running   0          3m37s   10.244.0.14   minikube   <none>           <none>
+
+> Allocated resources:
+    (Total limits may be over 100 percent, i.e., overcommitted.)
+    Resource           Requests     Limits
+    --------           --------     ------
+    cpu                1300m (32%)  1400m (35%)
+    memory             996Mi (26%)  1372Mi (35%)
+    ephemeral-storage  0 (0%)       0 (0%)
+    hugepages-1Gi      0 (0%)       0 (0%)
+    hugepages-2Mi      0 (0%)       0 (0%)
+  Events:
+
+
+
+== 2. FAULT RECOVERY: delete one API pod under traffic ==
+deleting: api-75c5c468fc-lqlj8
+pod "api-75c5c468fc-lqlj8" deleted from helpdesk namespace
+t=1s request=OK readyReplicas=1
+t=1s request=OK readyReplicas=1
+t=2s request=OK readyReplicas=1
+t=2s request=OK readyReplicas=1
+t=3s request=OK readyReplicas=1
+t=3s request=OK readyReplicas=1
+t=4s request=OK readyReplicas=1
+t=4s request=OK readyReplicas=1
+t=5s request=OK readyReplicas=1
+t=5s request=OK readyReplicas=1
+t=6s request=OK readyReplicas=1
+t=6s request=OK readyReplicas=1
+t=7s request=OK readyReplicas=1
+t=7s request=OK readyReplicas=2
+back to 2/2 ready after about 7s
+NAME                   READY   STATUS        RESTARTS   AGE
+api-75c5c468fc-lqlj8   1/1     Terminating   0          3m38s
+api-75c5c468fc-nt5jr   1/1     Running       0          8s
+api-75c5c468fc-vq252   1/1     Running       0          3m46s
+
+8s          Warning   FailedCreate                   replicaset/api-75c5c468fc            Error creating: Unauthorized
+8s          Normal    Killing                        pod/api-75c5c468fc-lqlj8             Stopping container api
+8s          Warning   FailedToUpdateEndpointSlices   service/api                          Error updating Endpoint 
+Slices for Service helpdesk/api: failed to update api-wk6tx EndpointSlice for Service helpdesk/api: Unauthorized
+7s          Normal    SuccessfulCreate               replicaset/api-75c5c468fc            Created pod: 
+api-75c5c468fc-nt5jr
+7s          Normal    Scheduled                      pod/api-75c5c468fc-nt5jr             Successfully assigned 
+helpdesk/api-75c5c468fc-nt5jr to minikube
+7s          Normal    Created                        pod/api-75c5c468fc-nt5jr             Container created
+7s          Normal    Pulled                         pod/api-75c5c468fc-nt5jr             Container image 
+"helpdesk-api:v1" already present on machine and can be accessed by the pod
+6s          Normal    Started                        pod/api-75c5c468fc-nt5jr             Container started
+
+
+
+== 3. PERSISTENCE: delete the postgres pod ==
+INSERT 0 1
+tickets before insert: 7   after insert: 8   old db pod: postgres-5ff8f5c867-cdxw5
+pod "postgres-5ff8f5c867-cdxw5" deleted from helpdesk namespace
+pod/postgres-5ff8f5c867-5sdpm condition met
+new db pod: postgres-5ff8f5c867-5sdpm   tickets after replacement: 8 (expected 8)
+8|PERSISTENCE-TEST
+new pod startup log (should say initialization skipped):
+
+PostgreSQL Database directory appears to contain a database; Skipping initialization
+2026-10-13 04:15:53.896 UTC [1] LOG:  database system is ready to accept connections
+
+
+NAME           STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+postgres-pvc   Bound    pvc-93858451-f549-4c29-b4e9-b6f39e39dc7f   1Gi        RWO            standard       <unset>                 7m16s
+DELETE 1
+
+== 4a. MEMORY LIMIT: pod allocates past 64Mi ==
+pod/oom-test created
+reason / exit code:
+OOMKilled exit=137
+
+== 4b. CPU LIMIT: busy loop capped at 100m ==
+pod/cpu-burn created
+NAME                        CPU(cores)   MEMORY(bytes)   
+api-75c5c468fc-nt5jr        1m           18Mi            
+api-75c5c468fc-vq252        2m           15Mi            
+cpu-burn                    101m         8Mi             
+postgres-5ff8f5c867-5sdpm   13m          21Mi            
+web-5d69cf76b5-7d2fj        1m           4Mi             
+web-5d69cf76b5-c66vc        1m           4Mi             
+pod "oom-test" deleted from helpdesk namespace
+pod "cpu-burn" deleted from helpdesk namespace
+
+== FINAL STATE ==
+NAME                        READY   STATUS        RESTARTS       AGE
+api-75c5c468fc-nt5jr        1/1     Running       0              2m
+api-75c5c468fc-vq252        1/1     Running       1 (110s ago)   5m38s
+cpu-burn                    1/1     Terminating   0              81s
+postgres-5ff8f5c867-5sdpm   1/1     Running       0              111s
+web-5d69cf76b5-7d2fj        1/1     Running       0              5m32s
+web-5d69cf76b5-c66vc        1/1     Running       0              5m38s

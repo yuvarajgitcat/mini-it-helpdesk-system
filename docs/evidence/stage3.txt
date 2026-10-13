@@ -1,0 +1,87 @@
+﻿STAGE 3 - 10/13/2026 09:41:55
+persistentvolumeclaim/uploads-pvc created
+persistentvolumeclaim/postgres-pvc unchanged
+deployment.apps/postgres configured
+service/postgres unchanged
+Waiting for deployment "postgres" rollout to finish: 0 out of 1 new replicas have been updated...
+Waiting for deployment "postgres" rollout to finish: 0 out of 1 new replicas have been updated...
+Waiting for deployment "postgres" rollout to finish: 0 out of 1 new replicas have been updated...
+Waiting for deployment "postgres" rollout to finish: 0 of 1 updated replicas are available...
+deployment "postgres" successfully rolled out
+deployment.apps/api configured
+service/api unchanged
+deployment.apps/web configured
+service/web unchanged
+Waiting for deployment "api" rollout to finish: 1 out of 2 new replicas have been updated...
+Waiting for deployment "api" rollout to finish: 1 out of 2 new replicas have been updated...
+Waiting for deployment "api" rollout to finish: 1 out of 2 new replicas have been updated...
+Waiting for deployment "api" rollout to finish: 1 out of 2 new replicas have been updated...
+Waiting for deployment "api" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "api" rollout to finish: 1 old replicas are pending termination...
+deployment "api" successfully rolled out
+deployment "web" successfully rolled out
+* metrics-server is an addon maintained by Kubernetes. For any concerns contact minikube on GitHub.
+You can view the list of minikube maintainers at: https://github.com/kubernetes/minikube/blob/master/OWNERS
+  - Using image registry.k8s.io/metrics-server/metrics-server:v0.9.0
+* The 'metrics-server' addon is enabled
+
+== COPY UPLOADS ==
+local files: 3
+files in volume: 
+3
+
+== DEPLOYMENTS ==
+NAME                       READY   UP-TO-DATE   AVAILABLE   AGE     CONTAINERS   IMAGES               SELECTOR
+deployment.apps/api        2/2     2            2           28m     api          helpdesk-api:v1      app=api
+deployment.apps/postgres   1/1     1            1           3m40s   postgres     postgres:16-alpine   app=postgres
+deployment.apps/web        2/2     2            2           28m     web          helpdesk-web:v1      app=web
+
+NAME                            READY   STATUS        RESTARTS   AGE     IP            NODE       NOMINATED NODE   READINESS GATES
+pod/api-75c5c468fc-lqlj8        1/1     Running       0          12s     10.244.0.16   minikube   <none>           <none>
+pod/api-75c5c468fc-vq252        1/1     Running       0          20s     10.244.0.12   minikube   <none>           <none>
+pod/api-c65d6d5b7-2svt5         1/1     Terminating   0          20s     10.244.0.11   minikube   <none>           <none>
+pod/api-c65d6d5b7-7jchv         1/1     Terminating   0          3m23s   10.244.0.9    minikube   <none>           <none>
+pod/postgres-5ff8f5c867-cdxw5   1/1     Running       0          27s     10.244.0.10   minikube   <none>           <none>
+pod/web-5d69cf76b5-7d2fj        1/1     Running       0          14s     10.244.0.15   minikube   <none>           <none>
+pod/web-5d69cf76b5-c66vc        1/1     Running       0          20s     10.244.0.14   minikube   <none>           <none>
+
+NAME                                 STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE     VOLUMEMODE
+persistentvolumeclaim/postgres-pvc   Bound    pvc-93858451-f549-4c29-b4e9-b6f39e39dc7f   1Gi        RWO            standard       <unset>                 3m40s   Filesystem
+persistentvolumeclaim/uploads-pvc    Bound    pvc-d01976de-dfdf-4b4c-9a79-db47825fb351   1Gi        RWO            standard       <unset>                 27s     Filesystem
+
+== LIMITS + PROBES (one api pod) ==
+
+    Limits:
+      cpu:     300m
+      memory:  256Mi
+    Requests:
+      cpu:      100m
+      memory:   128Mi
+    Liveness:   http-get http://:5000/ delay=15s timeout=1s period=10s #success=1 #failure=3
+    Readiness:  http-get http://:5000/ delay=5s timeout=1s period=5s #success=1 #failure=3
+
+
+
+== SHARED UPLOADS: write in pod A, read in pod B ==
+A=api-75c5c468fc-lqlj8  B=api-75c5c468fc-vq252 api-c65d6d5b7-2svt5 api-c65d6d5b7-7jchv  B reads:
+shared-ok
+
+== EVIDENCE FILE SERVED (bytes) ==
+file: 1791260217577-723325883.png
+3622
+
+== WEB -> API (bytes) ==
+kubectl : wget: can't connect to remote host: Connection refused
+At line:1 char:1
++ kubectl exec -n helpdesk deploy/web -- sh -c "wget -qO- http://localh ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (wget: can't con...nection refused:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+0
+
+== ERRORS ==
+LAST SEEN   TYPE      REASON      OBJECT                          MESSAGE
+3m45s       Warning   Unhealthy   pod/postgres-678d888c98-wmfp2   Readiness probe errored and resulted in unknown state: rpc error: code = Unknown desc = failed to exec in container: container is in CONTAINER_EXITED state
+15s         Warning   Unhealthy   pod/web-5d69cf76b5-7d2fj        Readiness probe failed: Get "http://10.244.0.15:80/": dial tcp 10.244.0.15:80: connect: connection refused
+19s         Warning   Unhealthy   pod/web-5d69cf76b5-c66vc        Readiness probe failed: Get "http://10.244.0.14:80/": dial tcp 10.244.0.14:80: connect: connection refused

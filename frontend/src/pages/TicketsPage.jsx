@@ -652,7 +652,7 @@ function TicketsPage() {
             item.mime_type?.startsWith("image/");
 
         const fileUrl =
-            `http://localhost:5000${item.file_url}`;
+            `${import.meta.env.VITE_API_BASE ? "" : "http://localhost:5000"}${item.file_url}`;
 
         return (
             <div

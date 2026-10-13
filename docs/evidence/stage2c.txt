@@ -1,0 +1,49 @@
+﻿STAGE 2c - pg16-compatible dump - 10/13/2026 09:38:42
+original lines: 531  cleaned lines: 528
+deployment.apps "postgres" deleted from helpdesk namespace
+persistentvolumeclaim "postgres-pvc" deleted from helpdesk namespace
+configmap/db-init configured
+persistentvolumeclaim/postgres-pvc created
+deployment.apps/postgres created
+service/postgres unchanged
+Waiting for deployment "postgres" rollout to finish: 0 of 1 updated replicas are available...
+deployment "postgres" successfully rolled out
+deployment.apps/api restarted
+Waiting for deployment "api" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "api" rollout to finish: 1 old replicas are pending termination...
+deployment "api" successfully rolled out
+
+== PODS ==
+NAME                            READY   STATUS        RESTARTS   AGE
+pod/api-6d75d74f5-d27vl         1/1     Terminating   0          17m
+pod/api-c65d6d5b7-7jchv         1/1     Running       0          1s
+pod/postgres-678d888c98-m997h   1/1     Running       0          17s
+pod/web-7dd8c549dc-288kv        1/1     Running       0          24m
+
+NAME                                 STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+persistentvolumeclaim/postgres-pvc   Bound    pvc-93858451-f549-4c29-b4e9-b6f39e39dc7f   1Gi        RWO            standard       <unset>                 18s
+
+== ROW COUNTS ==
+ emp | assets | tickets | history | evidence 
+-----+--------+---------+---------+----------
+   3 |      3 |       7 |       2 |        3
+(1 row)
+
+ extname 
+---------
+ plpgsql
+ pg_trgm
+(2 rows)
+
+       stored_filename       |            storage_path             
+-----------------------------+-------------------------------------
+ 1791260217577-723325883.png | uploads/1791260217577-723325883.png
+ 1791414756162-844404563.png | uploads/1791414756162-844404563.png
+ 1791438117195-989715246.png | uploads/1791438117195-989715246.png
+(3 rows)
+
+
+== API ==
+[{"ticket_id":7,"title":"laptop screen","description":"lap","priority":"MEDIUM","status":"OPEN","created_at":"2026-10-08T11:11:06.227Z","employee_id":3,"employee_name":"Arjun Rao","department":"Finance","asset_id":1,"asset_tag":"LAP-001","asset_type":"Laptop","model":"Dell Latitude 7420"},{"ticket_id":6,"title":"Wi-Fi connection dropping","description":"User reports wireless connection repeatedly 
+
+== RESTARTS / POSTGRES ERRORS ==

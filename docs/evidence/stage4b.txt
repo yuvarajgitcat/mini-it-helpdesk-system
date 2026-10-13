@@ -1,0 +1,109 @@
+﻿STAGE 4b - 10/13/2026 09:50:36
+
+== build v2 ==
+sha256:c1bfb5112a6494d3143ac1332b27212ec4abecb82a9612b601c2012c005761b9
+
+docker.io/library/helpdesk-api:v2
+docker.io/library/helpdesk-api:v1
+
+
+
+== ROLLING UPDATE v1 -> v2 under traffic ==
+deployment.apps/api configured
+service/api unchanged
+requests sent during rollout: 9   failed: 0   time: 13s
+NAME                   IMAGE             READY   RESTARTS
+api-5f59b7f494-48rx6   helpdesk-api:v2   true    0
+api-5f59b7f494-b6pd9   helpdesk-api:v2   true    0
+api-75c5c468fc-nt5jr   helpdesk-api:v1   true    0
+api-75c5c468fc-vq252   helpdesk-api:v1   true    1
+
+== DB POD DELETED AGAIN: does the API survive? ==
+pod "postgres-5ff8f5c867-5sdpm" deleted from helpdesk namespace
+t=1s api_request=FAIL
+kubectl : wget: server returned error: HTTP/1.1 500 Internal Server Error
+At line:2 char:11
++   $res = (kubectl exec -n helpdesk $web -- sh -c "wget -q -T 3 -O /de ...
++           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (wget: server re...al Server Error:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+t=5s api_request=kubectl : wget: download timed out
+At line:2 char:11
++   $res = (kubectl exec -n helpdesk $web -- sh -c "wget -q -T 3 -O /de ...
++           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (wget: download timed out:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+FAIL
+t=6s api_request=kubectl : wget: server returned error: HTTP/1.1 500 Internal Server Error
+At line:2 char:11
++   $res = (kubectl exec -n helpdesk $web -- sh -c "wget -q -T 3 -O /de ...
++           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (wget: server re...al Server Error:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+FAIL
+t=7s api_request=kubectl : wget: server returned error: HTTP/1.1 500 Internal Server Error
+At line:2 char:11
++   $res = (kubectl exec -n helpdesk $web -- sh -c "wget -q -T 3 -O /de ...
++           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (wget: server re...al Server Error:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+FAIL
+t=7s api_request=OK
+t=8s api_request=OK
+t=9s api_request=OK
+t=10s api_request=OK
+t=11s api_request=OK
+t=12s api_request=OK
+t=13s api_request=OK
+t=14s api_request=OK
+t=15s api_request=OK
+t=15s api_request=OK
+t=16s api_request=OK
+t=17s api_request=OK
+t=18s api_request=OK
+t=19s api_request=OK
+t=20s api_request=OK
+t=21s api_request=OK
+t=22s api_request=OK
+t=23s api_request=OK
+t=23s api_request=OK
+t=24s api_request=OK
+t=25s api_request=OK
+t=26s api_request=OK
+t=27s api_request=OK
+t=28s api_request=OK
+t=29s api_request=OK
+t=30s api_request=OK
+t=31s api_request=OK
+t=31s api_request=OK
+t=32s api_request=OK
+t=33s api_request=OK
+t=34s api_request=OK
+t=35s api_request=OK
+t=36s api_request=OK
+t=37s api_request=OK
+t=38s api_request=OK
+t=39s api_request=OK
+pod/postgres-5ff8f5c867-242z7 condition met
+
+after recovery, tickets via API (bytes):
+2161
+
+== FINAL: restart counts (want 0 for both api pods) ==
+NAME                        READY   STATUS    RESTARTS   AGE
+api-5f59b7f494-48rx6        1/1     Running   0          49s
+api-5f59b7f494-b6pd9        1/1     Running   0          56s
+postgres-5ff8f5c867-242z7   1/1     Running   0          43s
+web-5d69cf76b5-7d2fj        1/1     Running   0          9m43s
+web-5d69cf76b5-c66vc        1/1     Running   0          9m49s
+
+== api log mentions of the handled error ==
+api-5f59b7f494-48rx6 :
+api-5f59b7f494-b6pd9 :
+
+Idle database client error (pool will reconnect): terminating connection due to administrator command
+
+

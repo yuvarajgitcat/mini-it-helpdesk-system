@@ -1,0 +1,6 @@
+
+
+# local-only: real ticket data, scratch output
+database/full_dump.sql
+database/full_dump_pg16.sql
+stage0.txt

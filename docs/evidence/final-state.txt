@@ -1,0 +1,90 @@
+﻿FINAL STATE - 10/13/2026 09:53:40
+
+== versions ==
+Client Version: v1.36.1
+Kustomize Version: v5.8.1
+Server Version: v1.37.0
+minikube version: v1.39.0
+commit: 7a9f6a841470a207de8cf4bafcccee0969d8ba10
+
+== workloads ==
+NAME                       READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES               SELECTOR
+deployment.apps/api        2/2     2            2           39m   api          helpdesk-api:v2      app=api
+deployment.apps/postgres   1/1     1            1           14m   postgres     postgres:16-alpine   app=postgres
+deployment.apps/web        2/2     2            2           39m   web          helpdesk-web:v1      app=web
+
+NAME                            READY   STATUS    RESTARTS   AGE     IP            NODE       NOMINATED NODE   READINESS GATES
+pod/api-5f59b7f494-48rx6        1/1     Running   0          2m36s   10.244.0.23   minikube   <none>           <none>
+pod/api-5f59b7f494-b6pd9        1/1     Running   0          2m43s   10.244.0.22   minikube   <none>           <none>
+pod/postgres-5ff8f5c867-242z7   1/1     Running   0          2m30s   10.244.0.24   minikube   <none>           <none>
+pod/web-5d69cf76b5-7d2fj        1/1     Running   0          11m     10.244.0.15   minikube   <none>           <none>
+pod/web-5d69cf76b5-c66vc        1/1     Running   0          11m     10.244.0.14   minikube   <none>           <none>
+
+NAME               TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE   SELECTOR
+service/api        ClusterIP   10.105.139.107   <none>        5000/TCP       39m   app=api
+service/postgres   ClusterIP   10.96.112.255    <none>        5432/TCP       40m   app=postgres
+service/web        NodePort    10.98.187.32     <none>        80:30472/TCP   39m   app=web
+
+NAME                                 STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE   VOLUMEMODE
+persistentvolumeclaim/postgres-pvc   Bound    pvc-93858451-f549-4c29-b4e9-b6f39e39dc7f   1Gi        RWO            standard       <unset>                 14m   Filesystem
+persistentvolumeclaim/uploads-pvc    Bound    pvc-d01976de-dfdf-4b4c-9a79-db47825fb351   1Gi        RWO            standard       <unset>                 11m   Filesystem
+
+== resource usage ==
+NAME                        CPU(cores)   MEMORY(bytes)   
+api-5f59b7f494-48rx6        1m           17Mi            
+api-5f59b7f494-b6pd9        1m           20Mi            
+postgres-5ff8f5c867-242z7   8m           19Mi            
+web-5d69cf76b5-7d2fj        1m           4Mi             
+web-5d69cf76b5-c66vc        1m           4Mi             
+
+== limits and probes per deployment ==
+
+Name:                   api
+Replicas:               2 desired | 2 updated | 2 total | 2 available | 0 unavailable
+StrategyType:           RollingUpdate
+RollingUpdateStrategy:  0 max unavailable, 1 max surge
+    Image:      helpdesk-api:v2
+    Limits:
+      cpu:     300m
+      memory:  256Mi
+    Requests:
+      cpu:      100m
+      memory:   128Mi
+    Liveness:   http-get http://:5000/ delay=15s timeout=1s period=10s #success=1 #failure=3
+    Readiness:  http-get http://:5000/ delay=5s timeout=1s period=5s #success=1 #failure=3
+Name:                   web
+Replicas:               2 desired | 2 updated | 2 total | 2 available | 0 unavailable
+StrategyType:           RollingUpdate
+RollingUpdateStrategy:  25% max unavailable, 25% max surge
+    Image:      helpdesk-web:v1
+    Limits:
+      cpu:     100m
+      memory:  64Mi
+    Requests:
+      cpu:         25m
+      memory:      32Mi
+    Liveness:      http-get http://:80/ delay=10s timeout=1s period=10s #success=1 #failure=3
+    Readiness:     http-get http://:80/ delay=0s timeout=1s period=5s #success=1 #failure=3
+Name:               postgres
+Replicas:           1 desired | 1 updated | 1 total | 1 available | 0 unavailable
+StrategyType:       Recreate
+    Image:      postgres:16-alpine
+    Limits:
+      cpu:     500m
+      memory:  512Mi
+    Requests:
+      cpu:      100m
+      memory:   256Mi
+    Liveness:   exec [sh -c pg_isready -U $POSTGRES_USER -d $POSTGRES_DB] delay=30s timeout=1s period=10s #success=1 
+#failure=3
+    Readiness:  exec [sh -c pg_isready -U $POSTGRES_USER -d $POSTGRES_DB] delay=5s timeout=1s period=5s #success=1 
+#failure=3
+
+
+
+== data in cluster database ==
+ emp | assets | tickets | history | evidence 
+-----+--------+---------+---------+----------
+   3 |      3 |       7 |       2 |        3
+(1 row)
+

@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:5000/api";
+const BASE_URL = import.meta.env.VITE_API_BASE || "http://localhost:5000/api";
 
 
 // =========================================================
@@ -210,7 +210,7 @@ export const uploadTicketEvidence = async (
 
     const response =
         await fetch(
-            `http://localhost:5000/api/tickets/${ticketId}/evidence`,
+            `${BASE_URL}/tickets/${ticketId}/evidence`,
             {
                 method: "POST",
                 body: formData
@@ -243,7 +243,7 @@ export const getTicketEvidence = async (
 
     const response =
         await fetch(
-            `http://localhost:5000/api/tickets/${ticketId}/evidence`
+            `${BASE_URL}/tickets/${ticketId}/evidence`
         );
 
 
@@ -272,7 +272,7 @@ export const getSimilarTickets = async (
 
     const response =
         await fetch(
-            `http://localhost:5000/api/tickets/${ticketId}/similar`
+            `${BASE_URL}/tickets/${ticketId}/similar`
         );
 
 
